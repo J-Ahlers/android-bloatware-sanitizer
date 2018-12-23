@@ -51,12 +51,14 @@ function delete_list() {
         category=$(basename "${file_path%.cfg}")
         echo "Removing $category bloatware..."
         while IFS='' read -r app || [[ -n "$app" ]]; do
-            installed_app=$(echo "${package_list}" | grep -w "^package:${app}")
+            installed_app=$(echo "${package_list}" | grep -w "^package:${app}$")
             if [[ $installed_app =~ .*"package:${app}" ]]; then
                 echo "     > Deleting: ${app}"
-                #adb "${device}" shell pm uninstall -k --user 0 "${app}"
+                set -m
+                delete_app "${device}" "${app}" &
             fi
         done < "${file_path}"
+        while [ 1 ]; do fg 2> /dev/null; [ $? == 1 ] && break; done
     else
         echo "[ERROR] Config file not found."
         echo "${file_path}"
@@ -66,8 +68,22 @@ function delete_list() {
         echo "Further instructions on how to contribute are in the README."
         exit 1
     fi
+
+    return 0
 }
 
+function delete_app() {
+    local device=$1
+    local app=$2
+
+    # For some reason the ADB shell causes the loop that uninstalls
+    # a list of apps to break after executing one shell command.
+    # So lets wait until all processes are started before excuting
+    # anything...
+    # This is a hack but it should do the trick
+    sleep 1s
+    result=$(adb ${device} shell pm uninstall -k --user 0 ${app} || true)
+}
 
 function main() {
     local device=""
@@ -133,7 +149,9 @@ function main() {
     package_list=$(adb ${device} shell pm list packages)
     for config in "${categories[@]}"; do
         delete_list "${config}" "${device}" "${package_list}"
-    done    
+    done
+
+    echo "Bloatware removal successfully finished."
 }
 
 main "$@"
