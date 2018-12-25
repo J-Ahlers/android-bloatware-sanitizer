@@ -4,7 +4,7 @@
 # Script that can be used to remove all sorts of system #
 # bloatware from Android devices. This will also remove #
 # apps that can not be uninstalled from the device      #
-# itself.                                               #
+# itself without rooting the device.                    #
 #                                                       #
 #    Version         1.0                                #
 #    Author          Jonas Ahlers                       #
@@ -49,10 +49,10 @@ function delete_list() {
         return
     elif [[ -f "${file_path}" ]]; then
         category=$(basename "${file_path%.cfg}")
-        echo "Removing $category bloatware..."
+        echo "Removing ${category} bloatware..."
         while IFS='' read -r app || [[ -n "$app" ]]; do
             installed_app=$(echo "${package_list}" | grep -w "^package:${app}$")
-            if [[ $installed_app =~ .*"package:${app}" ]]; then
+            if [[ "${installed_app}" =~ .*"package:${app}" ]]; then
                 echo "     > Deleting: ${app}"
                 set -m
                 delete_app "${device}" "${app}" &
@@ -82,7 +82,7 @@ function delete_app() {
     # anything...
     # This is a hack but it should do the trick
     sleep 1s
-    result=$(adb ${device} shell pm uninstall -k --user 0 ${app} || true)
+    adb ${device} shell pm uninstall -k --user 0 "${app}" 2>&1 >/dev/null
 }
 
 function main() {
@@ -142,7 +142,7 @@ function main() {
             exit 1
         else
             echo "Device manufacturer: ${oem}"
-            categories+=("${OEM_DIR}/${oem}.cfg")
+            categories+=("${OEM_DIR}/${oem,,}.cfg")
         fi
     fi
 
