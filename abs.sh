@@ -128,6 +128,20 @@ function main() {
         esac
     done
 
+    # Checking if device is supported
+    # Some devices seem to require root in order to remove the bloatware
+    # System apps for these devices appear not to be installed for user 0 and
+    # can thus not be removed. Finding a workaround that does not require the
+    # device to be rooted would be nice.
+    product_name=$(adb ${device} shell getprop ro.product.model | tr -d '\r\n')
+    #product_name="E2303"
+    result=$(grep "${device}" "${THIS_DIR}/unsupported_devices" )
+    echo "[DEBUG] Product name: (${product_name}) ($result)"
+    if [ "${product_name}" = "${result}" ]; then
+        echo "[ERROR] Device not supported. You will need to root your device. Sorry."
+        exit 1
+    fi
+
     if [ -z "${categories}" ]; then
         echo "Loading available configs..."
         while IFS= read -d $'\0' -r file ; do
