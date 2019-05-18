@@ -134,9 +134,7 @@ function main() {
     # can thus not be removed. Finding a workaround that does not require the
     # device to be rooted would be nice.
     product_name=$(adb ${device} shell getprop ro.product.model | tr -d '\r\n')
-    #product_name="E2303"
     result=$(grep "${device}" "${THIS_DIR}/unsupported_devices" )
-    echo "[DEBUG] Product name: (${product_name}) ($result)"
     if [ "${product_name}" = "${result}" ]; then
         echo "[ERROR] Device not supported. You will need to root your device. Sorry."
         exit 1
