@@ -30,9 +30,16 @@ Options are:
     Device ID to be used - required if multple devices are connted.
     To retreive the device ID use 'adb devices'
 
+  --list-categories
+    Prints all available categories.
+
   --categories <LIST>:
     Categories to be included. Must be separated by commas. Optional.
     By default apps from all categories will be included.
+    E.g. --categories google,shops
+
+  --exclude-categories <LIST>:
+    Categories to be excluded. Must be separated by commas. Optional.
 
   --skip-oem:
     If passed no OEM bloatware will be removed.
@@ -103,6 +110,13 @@ function main() {
             --device)
                 device="-s $1"
                 shift || (echo "No device-ID given" && exit 1)
+                ;;
+            --list-categories)
+                while IFS= read -d $'\0' -r file ; do
+                    echo "$(basename "${file}" ".cfg")"
+                done < <(find "${CONFIG_DIR}" -maxdepth 1 -type f -print0)
+                exit 0
+                shift
                 ;;
             --categories)
                 IFS=',' read -ra array <<< $1
